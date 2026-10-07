@@ -1,0 +1,115 @@
+const startBtn = document.getElementById("startBtn");
+const speech = document.getElementById("speech");
+const emotion = document.getElementById("emotion");
+
+const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (!SpeechRecognition) {
+
+    speech.innerText =
+        "Speech recognition is not supported. Please use Google Chrome.";
+
+    startBtn.disabled = true;
+
+} else {
+
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    startBtn.addEventListener("click", function () {
+
+        speech.innerText = "🎧 Listening...";
+        emotion.innerText = "⏳ Detecting...";
+
+        recognition.start();
+    });
+
+    recognition.onresult = function(event) {
+
+        const text = event.results[0][0].transcript;
+
+        speech.innerText = text;
+
+        const result = detectEmotion(text);
+
+        emotion.innerText = result;
+    };
+
+    recognition.onerror = function(event) {
+
+        speech.innerText =
+            "Error: " + event.error;
+
+        emotion.innerText = "❌ Try Again";
+    };
+
+    recognition.onend = function() {
+        startBtn.innerText = "🎙️ Start Speaking";
+    };
+}
+
+
+// Emotion Detection
+function detectEmotion(text) {
+
+    text = text.toLowerCase();
+
+    const happyWords = [
+        "happy", "happiness", "love", "lovely",
+        "great", "good", "awesome", "amazing",
+        "wonderful", "excited", "fun",
+        "beautiful", "joy", "enjoy"
+    ];
+
+    const sadWords = [
+        "sad", "sadness", "cry", "crying",
+        "lonely", "alone", "hurt", "unhappy",
+        "upset", "miss", "missing", "pain"
+    ];
+
+    const angryWords = [
+        "angry", "anger", "mad", "hate",
+        "furious", "annoyed", "irritated",
+        "stupid", "disgusting", "frustrated"
+    ];
+
+    let happyScore = 0;
+    let sadScore = 0;
+    let angryScore = 0;
+
+    happyWords.forEach(word => {
+        if (text.includes(word)) {
+            happyScore++;
+        }
+    });
+
+    sadWords.forEach(word => {
+        if (text.includes(word)) {
+            sadScore++;
+        }
+    });
+
+    angryWords.forEach(word => {
+        if (text.includes(word)) {
+            angryScore++;
+        }
+    });
+
+    if (happyScore > sadScore && happyScore > angryScore) {
+        return "😊 HAPPY";
+    }
+
+    if (sadScore > happyScore && sadScore > angryScore) {
+        return "😢 SAD";
+    }
+
+    if (angryScore > happyScore && angryScore > sadScore) {
+        return "😡 ANGRY";
+    }
+
+    return "😐 NEUTRAL";
+}
